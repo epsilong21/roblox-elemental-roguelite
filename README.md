@@ -20,3 +20,26 @@ El repositorio es la fuente única de verdad. No se deben tomar decisiones de di
 6. Los resultados se registran en QA.
 7. ChatGPT revisa implementación y resultados.
 8. Solo después se cierra la tarea y se activa la siguiente.
+
+## Desarrollo local con Rojo
+
+Flujo de trabajo:
+
+```text
+VS Code / archivos locales
+        ↓
+       Rojo
+        ↓
+ Roblox Studio
+```
+
+1. Instala las herramientas del proyecto (ya gestionadas por Rokit vía `rokit.toml`).
+2. Levanta el servidor de Rojo desde la raíz del repositorio:
+
+   ```powershell
+   rojo serve
+   ```
+
+3. Abre Roblox Studio, instala/activa el plugin de Rojo y usa **Connect** para sincronizar con el servidor local.
+
+El mapeo de carpetas está definido en `default.project.json`.

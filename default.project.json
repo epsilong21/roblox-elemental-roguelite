@@ -1,0 +1,29 @@
+{
+  "name": "Roguelite",
+  "tree": {
+    "$className": "DataModel",
+    "ReplicatedStorage": {
+      "Roguelite": {
+        "$className": "Folder",
+        "Shared": {
+          "$path": "src/shared"
+        },
+        "Config": {
+          "$path": "src/config"
+        }
+      }
+    },
+    "ServerScriptService": {
+      "RogueliteServer": {
+        "$path": "src/server"
+      }
+    },
+    "StarterPlayer": {
+      "StarterPlayerScripts": {
+        "RogueliteClient": {
+          "$path": "src/client"
+        }
+      }
+    }
+  }
+}
