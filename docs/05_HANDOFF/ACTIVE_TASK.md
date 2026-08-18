@@ -1,15 +1,26 @@
 # Active Task
 
 ## Task
-`ENV-001 — Configuración de Rojo`
+`M1-001 — Movimiento`
 
 ## Estado
-AWAITING LOCAL STUDIO VALIDATION
+READY FOR SPEC
 
 ## Objetivo
-Preparar el workspace Rojo local para sincronizar `src/` con Roblox Studio, sin implementar gameplay.
+Crear la base de movimiento del jugador adecuada para el prototipo del roguelite.
 
 ## Importante
-**No comenzar M1-001 hasta recibir aprobación.**
+Claude NO debe implementar todavía hasta que esta ficha tenga:
+- comportamiento aprobado
+- arquitectura cliente/servidor
+- archivos esperados
+- criterios de aceptación
+- plan de pruebas
 
-La tarea `M1-001 — Movimiento` permanece pausada (estado previo: `READY FOR SPEC`, pendiente de especificación por ChatGPT) y no debe iniciarse hasta que el usuario valide la conexión Rojo → Roblox Studio y apruebe continuar.
+Esta tarea será completada por ChatGPT antes de entregarse a implementación.
+
+---
+
+## Historial
+
+`ENV-001 — Configuración de Rojo` — **DONE**. Workspace Rojo configurado y validado (`rojo build` exitoso, sincronización real Rojo → Roblox Studio confirmada visualmente por el usuario). Ver `docs/05_HANDOFF/LAST_REPORT.md` para el detalle.

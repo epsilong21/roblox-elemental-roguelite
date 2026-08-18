@@ -2,7 +2,7 @@
 ENV-001 — Configuración de Rojo
 
 ### Result
-Completed
+Completed — DONE (cerrada tras validación real en Roblox Studio por el usuario)
 
 ### Environment
 - Rojo: 7.7.0 (coincide con `rokit.toml`)
@@ -37,6 +37,13 @@ Se creó `.gitignore` con `*.rbxl` y `*.rbxlx` para evitar que artefactos de bui
 - Primer intento de `rojo build`: falló con `Instance "Roguelite" is missing some required information` porque el nodo intermedio `Roguelite` (carpeta contenedora dentro de `ReplicatedStorage`) no tenía `$path` ni era un servicio conocido, por lo que Rojo no podía inferir su clase. Se corrigió añadiendo `"$className": "Folder"` explícito a ese nodo.
 - Segundo intento: `rojo build -o .env001-validation.rbxlx` finalizó correctamente ("Built project to .env001-validation.rbxlx").
 - El archivo `.env001-validation.rbxlx` fue eliminado tras la validación y no quedó versionado (confirmado con `git status` y ahora cubierto por `.gitignore`).
+- **Sincronización real Rojo → Roblox Studio validada por el usuario.** `rojo serve` levantado localmente (puerto 34872), plugin de Rojo conectado desde Studio, y se confirmó visualmente en el Explorer la presencia de:
+  - `ReplicatedStorage/Roguelite/Config`
+  - `ReplicatedStorage/Roguelite/Shared`
+  - `ServerScriptService/RogueliteServer`
+  - `StarterPlayer/StarterPlayerScripts/RogueliteClient`
+
+  ENV-001 queda **DONE**.
 
 ### How to test
 1. Abrir una terminal en la raíz del repositorio.
@@ -54,4 +61,4 @@ Se creó `.gitignore` con `*.rbxl` y `*.rbxlx` para evitar que artefactos de bui
 Ninguna. No hubo bloqueos que requirieran decisión de diseño.
 
 ### Suggested next action
-Validar conexión Rojo → Roblox Studio.
+Especificar `M1-001 — Movimiento` (comportamiento, arquitectura cliente/servidor, archivos esperados, criterios de aceptación, plan de pruebas) antes de iniciar implementación.
