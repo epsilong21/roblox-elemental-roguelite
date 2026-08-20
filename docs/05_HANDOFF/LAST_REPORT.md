@@ -1,64 +1,85 @@
 ### Task
-ENV-001 — Configuración de Rojo
+M1-001 — Movimiento
 
 ### Result
-Completed — DONE (cerrada tras validación real en Roblox Studio por el usuario)
-
-### Environment
-- Rojo: 7.7.0 (coincide con `rokit.toml`)
-- Rokit: 1.2.0
-- Nota: ambos binarios están instalados en `%USERPROFILE%\.rokit\bin`, pero ese directorio **no estaba en el PATH** de la sesión de terminal usada durante esta tarea (ni en Git Bash ni en PowerShell). Se invocaron con ruta completa para validar. Ver "Known issues".
+Completed — DONE (QA completo aprobado)
 
 ### Files changed
-- `default.project.json` (nuevo)
-- `.gitignore` (nuevo)
-- `README.md` (sección añadida: "Desarrollo local con Rojo")
+- `src/config/MovementConfig.lua` (nuevo)
+- `src/server/MovementService.lua` (nuevo)
+- `src/server/MovementBootstrap.server.lua` (nuevo)
+- `src/config/.gitkeep` (eliminado, reemplazado por contenido real)
+- `src/server/.gitkeep` (eliminado, reemplazado por contenido real)
 - `docs/05_HANDOFF/ACTIVE_TASK.md` (actualizado)
 - `docs/05_HANDOFF/LAST_REPORT.md` (este archivo)
+- `docs/00_PROJECT/CHANGELOG.md` (actualizado)
 
 ### Implementation
-Se configuró `default.project.json` (formato Rojo 7) para mapear la estructura existente de `src/` al árbol de Roblox Studio aprobado, sin usar `rojo init` y sin reorganizar carpetas.
+`MovementConfig.lua` centraliza los valores canónicos de movimiento (`WalkSpeed = 16`, `AutoRotate = true`, `JumpEnabled = false`, `AutoJumpEnabled = false`) como ModuleScript tipado en `src/config`, sin duplicarlos por código.
 
-Se creó `.gitignore` con `*.rbxl` y `*.rbxlx` para evitar que artefactos de build de Rojo queden versionados accidentalmente. Esto no estaba en la lista original de archivos esperados, pero es una necesidad técnica directa del requisito de validación de ENV-001 (asegurar que el archivo temporal de build nunca quede versionado), así que se documenta aquí como justificación.
+`MovementService.lua` (ModuleScript en `src/server`) expone `Start()`, que:
+- se suscribe a `Players.PlayerAdded` y `Players.PlayerRemoving`,
+- procesa jugadores ya presentes al iniciar el servicio,
+- por cada jugador, se suscribe a `CharacterAdded` (desconectando cualquier suscripción previa del mismo jugador para evitar duplicados) y procesa el personaje actual si ya existe,
+- en `onCharacterAdded`, espera el `Humanoid` con `WaitForChild(..., 5)` y valida su existencia/tipo antes de usarlo,
+- aplica `MovementConfig`: `WalkSpeed`, `AutoRotate`, `AutoJumpEnabled`, fuerza `JumpPower = 0` y `JumpHeight = 0`, y usa `Humanoid:SetStateEnabled(Enum.HumanoidStateType.Jumping, false)` para desactivar el salto de forma robusta (cubre ambos modos `UseJumpPower`/`JumpHeight`),
+- en `onPlayerRemoving`, desconecta y limpia la conexión del jugador para no dejar conexiones vivas.
 
-`src/tests` se dejó fuera del árbol de `default.project.json` intencionalmente.
+`MovementBootstrap.server.lua` (Script en `src/server`) solo hace `require` de `MovementService` y llama a `Start()`. Sin lógica adicional, sin framework de servicios.
 
-### Rojo mapping
-| Filesystem | Roblox |
-|---|---|
-| `src/shared` | `ReplicatedStorage/Roguelite/Shared` |
-| `src/config` | `ReplicatedStorage/Roguelite/Config` |
-| `src/server` | `ServerScriptService/RogueliteServer` |
-| `src/client` | `StarterPlayer/StarterPlayerScripts/RogueliteClient` |
-| `src/tests` | No mapeado (fuera del runtime) |
+No se creó código cliente (Roblox controla el input estándar) ni RemoteEvents/RemoteFunctions de movimiento.
+
+### Client/server flow
+1. Rojo sincroniza `src/server` → `ServerScriptService/RogueliteServer`. `MovementBootstrap` corre como `Script` al iniciar el servidor y llama a `MovementService.Start()`.
+2. El servidor escucha `PlayerAdded`/`CharacterAdded` y, cada vez que aparece un `Humanoid` (spawn inicial, muerte/respawn, Reset Character), aplica los valores de `MovementConfig` directamente sobre ese `Humanoid`.
+3. El cliente no interviene: usa los controles estándar de Roblox (WASD/thumbstick/gamepad) sin ningún script propio de input ni predicción de movimiento.
+4. No hay comunicación cliente→servidor relacionada con movimiento; el servidor nunca confía en, ni acepta, WalkSpeed/posición/dirección/velocidad enviados por el cliente.
+
+### Security
+- Toda la configuración canónica de movimiento vive en `ReplicatedStorage/Roguelite/Config` (legible, no escribible por el cliente) y se aplica exclusivamente desde `MovementService` en el servidor.
+- No existen remotes de movimiento explotables (no se crearon RemoteEvents/RemoteFunctions).
+- No se implementó anti-speedhack complejo (fuera de alcance de M1-001), según lo especificado.
+- **Deuda de seguridad registrada:** antes de beta, evaluar validaciones server-side contra movimiento anómalo (teleport/speed detection, reconciliation).
 
 ### Validation
-- JSON: válido (`ConvertFrom-Json` sin errores).
-- Primer intento de `rojo build`: falló con `Instance "Roguelite" is missing some required information` porque el nodo intermedio `Roguelite` (carpeta contenedora dentro de `ReplicatedStorage`) no tenía `$path` ni era un servicio conocido, por lo que Rojo no podía inferir su clase. Se corrigió añadiendo `"$className": "Folder"` explícito a ese nodo.
-- Segundo intento: `rojo build -o .env001-validation.rbxlx` finalizó correctamente ("Built project to .env001-validation.rbxlx").
-- El archivo `.env001-validation.rbxlx` fue eliminado tras la validación y no quedó versionado (confirmado con `git status` y ahora cubierto por `.gitignore`).
-- **Sincronización real Rojo → Roblox Studio validada por el usuario.** `rojo serve` levantado localmente (puerto 34872), plugin de Rojo conectado desde Studio, y se confirmó visualmente en el Explorer la presencia de:
-  - `ReplicatedStorage/Roguelite/Config`
-  - `ReplicatedStorage/Roguelite/Shared`
-  - `ServerScriptService/RogueliteServer`
-  - `StarterPlayer/StarterPlayerScripts/RogueliteClient`
-
-  ENV-001 queda **DONE**.
+- `rojo build -o .m1-001-validation.rbxlx`: **PASS**. Build exitoso, archivo temporal generado y eliminado después; no quedó versionado (cubierto además por `.gitignore`).
+- `git diff --check`: sin errores de espacios en blanco (solo aviso informativo de conversión LF→CRLF, no un fallo).
 
 ### How to test
-1. Abrir una terminal en la raíz del repositorio.
-2. Ejecutar `rojo serve` (si el comando no se reconoce, usar la ruta completa `~/.rokit/bin/rojo.exe serve` o revisar el PATH — ver "Known issues").
-3. Abrir Roblox Studio.
-4. Abrir/activar el plugin de Rojo y usar **Connect** para conectarse al servidor local (por defecto `localhost:34872`).
-5. En el Explorer de Studio, verificar el árbol resultante (ver sección 9 del informe final que sigue a continuación de este mensaje).
-6. Confirmar que no aparece contenido de `src/tests`.
+Ver checklist QA-001 a QA-010 en `docs/05_HANDOFF/ACTIVE_TASK.md`. Resumen:
+1. Conectar Rojo → Roblox Studio (`rojo serve`, plugin Connect).
+2. Play Solo: verificar spawn, WASD, diagonales, stop, Space repetido (no debe saltar), rotación al cambiar de dirección.
+3. Reset Character: reconfirmar WalkSpeed, movimiento, salto desactivado, AutoRotate.
+4. Probar con ≥2 jugadores (Studio → Test → 2 Players) moviéndose independientemente.
+5. Emulación móvil de Studio: thumbstick, movimiento, ausencia de auto-jump, sin errores.
+6. Revisar Output: sin errores ni spam.
+
+### QA results
+Confirmado manualmente por el usuario junto con ChatGPT, con pruebas reales en Roblox Studio:
+
+| Caso | Resultado |
+|---|---|
+| QA-001 Spawn | PASS |
+| QA-002 Cardinal | PASS |
+| QA-003 Diagonal | PASS |
+| QA-004 Stop | PASS |
+| QA-005 Jump disabled | PASS |
+| QA-006 Rotation | PASS |
+| QA-007 Respawn | PASS |
+| QA-008 Multiplayer | PASS |
+| QA-009 Mobile | PASS |
+| QA-010 Output | PASS |
+
+**Game feel:** `WalkSpeed = 16` evaluado como "Bien" y aprobado como valor actual del prototipo — no se establece como balance definitivo, queda abierto a ajuste en milestones posteriores.
 
 ### Known issues
-- Los ejecutables `rojo.exe` y `rokit.exe` existen en `%USERPROFILE%\.rokit\bin` pero ese directorio no estaba en el PATH de esta sesión de terminal. Puede requerir reiniciar la terminal, verificar la variable de entorno PATH del usuario, o que la instalación original de Rokit no completó el registro en PATH. Esto no bloquea la sincronización via Studio (el plugin no depende del PATH del sistema), pero sí afecta a `rojo serve`/`rojo build` invocados desde una terminal nueva.
-- No se ha realizado todavía la prueba interactiva real Rojo → Roblox Studio (pendiente del usuario, según alcance de ENV-001).
+Ninguno. QA completo sin fallos.
 
 ### Design questions
-Ninguna. No hubo bloqueos que requirieran decisión de diseño.
+Ninguna.
+
+### Known debt (registrada, no bloqueante)
+Antes de beta: evaluar validaciones server-side contra movimiento anómalo (teleport/speed detection, reconciliation). Ver sección "Security" arriba.
 
 ### Suggested next action
-Especificar `M1-001 — Movimiento` (comportamiento, arquitectura cliente/servidor, archivos esperados, criterios de aceptación, plan de pruebas) antes de iniciar implementación.
+Especificar `M1-002 — Cámara` (comportamiento, arquitectura cliente/servidor, archivos esperados, criterios de aceptación, plan de pruebas) antes de iniciar implementación.

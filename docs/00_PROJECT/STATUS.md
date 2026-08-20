@@ -18,8 +18,8 @@ Milestone 1 — Player Foundation
 
 Orden:
 
-1. Movimiento
-2. Cámara
+1. ~~Movimiento~~ — DONE (QA completo aprobado)
+2. Cámara — READY FOR SPEC (tarea activa)
 3. Esquiva
 
 No avanzar al combate hasta pasar el gate de esta etapa.
