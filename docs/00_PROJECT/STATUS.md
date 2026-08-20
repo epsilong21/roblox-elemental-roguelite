@@ -19,8 +19,8 @@ Milestone 1 — Player Foundation
 Orden:
 
 1. ~~Movimiento~~ — DONE (QA completo aprobado)
-2. Cámara — READY FOR SPEC (tarea activa)
-3. Esquiva
+2. ~~Cámara~~ — DONE (QA completo aprobado; visibilidad general "Aceptable", a revisar con sala de combate real)
+3. Esquiva — READY FOR SPEC (tarea activa)
 
 No avanzar al combate hasta pasar el gate de esta etapa.
 
